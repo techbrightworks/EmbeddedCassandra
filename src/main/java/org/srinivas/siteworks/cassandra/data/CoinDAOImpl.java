@@ -15,7 +15,8 @@ public class CoinDAOImpl {
 	@Autowired 
 	CassandraAdminOperations cassandraTemplate;
 	
-
+	@Autowired
+    CoinRepository coinRepository;
 	/**
 	 * Save Coin.	
 	 * @param coin the Coin

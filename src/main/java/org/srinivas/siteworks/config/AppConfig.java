@@ -26,7 +26,7 @@ import com.datastax.driver.core.Session;
 public class AppConfig {
 
 	@Configuration
-	@EnableCassandraRepositories()
+	@EnableCassandraRepositories(basePackages = { "org.srinivas.siteworks" })
 	static class CassandraConfig extends AbstractCassandraConfiguration {
 		public static final String KEYSPACE = "coinsdata";
 

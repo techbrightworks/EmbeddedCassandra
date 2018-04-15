@@ -31,6 +31,9 @@ public class CoinDAOImplTest extends TestCase {
 	@Autowired 
 	private CassandraAdminOperations cassandraAdminTemplate;
 	
+	@Autowired
+    CoinRepository coinRepository;
+	
 	private Coin coinOne;
 	private Coin coinTwo;
 	private Coin coinThree;
@@ -112,6 +115,13 @@ public class CoinDAOImplTest extends TestCase {
 		coinDAOImpl.updateCoin(coin);
 		Coin result = coinDAOImpl.retrieveCoin(coinOne.getName());
 		assertEquals("44444", result.getValue());
+	}
+	
+	@Test
+	public void testRetrieveByRepository() {
+		coinDAOImpl.saveCoin(coinOne);
+		Coin result = coinRepository.findByCoinName(coinOne.getName());
+		assertEquals("descriptionOne", result.getDescription());
 	}
 	
 }
