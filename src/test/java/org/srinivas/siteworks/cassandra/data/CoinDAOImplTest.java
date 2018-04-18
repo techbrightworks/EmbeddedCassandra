@@ -1,8 +1,9 @@
 package org.srinivas.siteworks.cassandra.data;
 
-
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -12,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.cassandra.core.CassandraAdminOperations;
+import org.springframework.data.cassandra.core.cql.CqlOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.srinivas.siteworks.cassandra.Coin;
@@ -33,6 +35,9 @@ public class CoinDAOImplTest extends TestCase {
 	
 	@Autowired
     CoinRepository coinRepository;
+	
+	@Autowired
+	CqlOperations cqlTemplate;
 	
 	private Coin coinOne;
 	private Coin coinTwo;
@@ -62,8 +67,8 @@ public class CoinDAOImplTest extends TestCase {
 		coinThree = new Coin();
 		coinThree.setName("coinThree");
 		coinThree.setDescription("descriptionThree");
-	    coinThree.setValue("987654");
-	    coinDAOImpl.cassandraTemplate =cassandraAdminTemplate;
+	    coinThree.setValue("abcd");
+	    coinDAOImpl.cassandraAdminTemplate =cassandraAdminTemplate;
 	}
 
 	
@@ -118,10 +123,27 @@ public class CoinDAOImplTest extends TestCase {
 	}
 	
 	@Test
-	public void testRetrieveByRepository() {
+	public void testRepositoryRetrieveByName() {
 		coinDAOImpl.saveCoin(coinOne);
-		Coin result = coinRepository.findByCoinName(coinOne.getName());
+		Coin result = coinRepository.findByName(coinOne.getName());
 		assertEquals("descriptionOne", result.getDescription());
 	}
 	
+	@Test
+	public void testRepositoryFindAll() {
+		coinDAOImpl.saveCoin(coinOne);
+		coinDAOImpl.saveCoin(coinTwo);
+		Stream<Coin> stream = coinRepository.findAll();
+		List<Coin> coinList = stream.collect(Collectors.toList());
+		assertTrue(coinList.stream().filter(e -> e.getValue().equals("67890")).findFirst().isPresent());
+		assertTrue(coinList.stream().filter(e -> e.getValue().equals("12345")).findFirst().isPresent());
+	}
+	
+	@Test
+	public void testCqlTemplateFindByCoinValue() {
+		coinDAOImpl.saveCoin(coinThree);
+		List<Coin> coins = coinDAOImpl.findByCoinValue(coinThree.getValue());
+		assertTrue(coins.size() == 1);
+		assertTrue(coins.stream().filter(e -> e.getName().equals(coinThree.getName())).findFirst().isPresent());
+	}
 }

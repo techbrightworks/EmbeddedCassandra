@@ -13,6 +13,8 @@ import org.springframework.data.cassandra.core.CassandraAdminOperations;
 import org.springframework.data.cassandra.core.CassandraAdminTemplate;
 import org.springframework.data.cassandra.core.convert.CassandraConverter;
 import org.springframework.data.cassandra.core.convert.MappingCassandraConverter;
+import org.springframework.data.cassandra.core.cql.CqlOperations;
+import org.springframework.data.cassandra.core.cql.CqlTemplate;
 import org.springframework.data.cassandra.core.cql.keyspace.CreateKeyspaceSpecification;
 import org.springframework.data.cassandra.core.cql.keyspace.DropKeyspaceSpecification;
 import org.springframework.data.cassandra.core.mapping.CassandraMappingContext;
@@ -32,7 +34,7 @@ public class AppConfig {
 
 		@Bean
 		public Cluster embedededcluster() {
-			Cluster cluster = Cluster.builder().addContactPoints("localhost").build();
+			Cluster cluster = Cluster.builder().addContactPoints("localhost").withPort(9042).build();
 			return cluster;
 		}
 
@@ -57,6 +59,11 @@ public class AppConfig {
 			return session;
 		}
 
+		@Bean
+		public CqlOperations cqlTemplate() throws Exception {
+			return new CqlTemplate(session().getObject());
+		}
+		
 		@Bean
 		public CassandraAdminOperations cassandraAdminTemplate() throws Exception {
 			return new CassandraAdminTemplate(session().getObject(), converter());

@@ -2,6 +2,7 @@ package org.srinivas.siteworks.cassandra;
 
 import org.springframework.data.cassandra.core.mapping.CassandraType;
 import org.springframework.data.cassandra.core.mapping.Column;
+import org.springframework.data.cassandra.core.mapping.Indexed;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
@@ -13,7 +14,7 @@ public class Coin {
 	@PrimaryKey("name")
 	@CassandraType(type = DataType.Name.TEXT)
 	private String name;
-
+    @Indexed
 	@Column("value")
 	private String value;
 

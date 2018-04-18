@@ -1,22 +1,35 @@
 package org.srinivas.siteworks.cassandra.data;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.cassandra.core.CassandraAdminOperations;
+import org.springframework.data.cassandra.core.cql.CqlOperations;
+import org.springframework.data.cassandra.core.cql.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.srinivas.siteworks.cassandra.Coin;
-
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.driver.core.querybuilder.Select.Where;
 import com.datastax.driver.core.querybuilder.Truncate;
 
 @Repository
 public class CoinDAOImpl {
 
 	@Autowired 
-	CassandraAdminOperations cassandraTemplate;
+	CassandraAdminOperations cassandraAdminTemplate;
 	
 	@Autowired
     CoinRepository coinRepository;
+	
+	@Autowired
+	CqlOperations cqlTemplate;
+	
+	
+	
 	/**
 	 * Save Coin.	
 	 * @param coin the Coin
@@ -28,8 +41,8 @@ public class CoinDAOImpl {
 				.value("description", coin.getDescription()) 
 				.ifNotExists(); 
 		
-		cassandraTemplate.getCqlOperations().execute(insert);
-		Coin result  = cassandraTemplate.selectOneById(coin.getName(), Coin.class);
+		cassandraAdminTemplate.getCqlOperations().execute(insert);
+		Coin result  = cassandraAdminTemplate.selectOneById(coin.getName(), Coin.class);
 		return result;
 	}
 
@@ -39,7 +52,7 @@ public class CoinDAOImpl {
 	 * @return the Coin
 	 */
 	public Coin retrieveCoin(String name) {
-		Coin result  = cassandraTemplate.selectOneById(name, Coin.class);
+		Coin result  = cassandraAdminTemplate.selectOneById(name, Coin.class);
 		return result;
 	}
 
@@ -48,7 +61,7 @@ public class CoinDAOImpl {
 	 * @param Coin the Coin
 	 */
 	public void deleteCoin(Coin coin) {
-		cassandraTemplate.delete(coin);
+		cassandraAdminTemplate.delete(coin);
 		
 	}
 
@@ -58,27 +71,46 @@ public class CoinDAOImpl {
 	 * @return the Coin
 	 */
 	public Coin updateCoin(Coin coin) {
-		cassandraTemplate.update(coin);
-		Coin result  = cassandraTemplate.selectOneById(coin.getName(), Coin.class);
+		cassandraAdminTemplate.update(coin);
+		Coin result  = cassandraAdminTemplate.selectOneById(coin.getName(), Coin.class);
 		return result;
 	}
+	
 
 	/**
 	 * Clear Coins.	
 	 */
 	public void clearCoins() {
 		Truncate truncate  = QueryBuilder.truncate("coinsdata", "Coins");
-		 cassandraTemplate.getCqlOperations().execute(truncate);
-		
+		 cassandraAdminTemplate.getCqlOperations().execute(truncate);
 	}
 	
-	
+	public List<Coin> findByCoinValue(String value){
+		 Select selectQuery = QueryBuilder.select("name","value","description").from("coinsdata", "Coins");
+	     Where selectWhere = selectQuery.where();
+	     Clause rkClause = QueryBuilder.eq("value", value);
+	     selectWhere.and(rkClause);
+	     List<Coin> description = cqlTemplate.query(
+				 selectQuery,
+					new RowMapper<Coin>() {
+						public Coin mapRow(Row row ,int rowNum) {
+							Coin coin = new Coin();
+							coin.setName(row.getString("name"));
+							coin.setValue(row.getString("value"));
+							coin.setDescription(row.getString("description"));
+							return coin;
+						}
+					});
+
+			return description;								
+	}
+		
 	public CassandraAdminOperations getCassandraTemplate() {
-		return cassandraTemplate;
+		return cassandraAdminTemplate;
 	}
 
 	public void setCassandraTemplate(CassandraAdminOperations cassandraTemplate) {
-		this.cassandraTemplate = cassandraTemplate;
+		this.cassandraAdminTemplate = cassandraTemplate;
 	}
 
 }

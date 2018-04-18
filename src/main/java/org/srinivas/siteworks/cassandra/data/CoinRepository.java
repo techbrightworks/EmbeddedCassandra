@@ -1,17 +1,21 @@
 package org.srinivas.siteworks.cassandra.data;
 
-import java.util.List;
 
-import org.springframework.data.cassandra.repository.CassandraRepository;
+import java.util.stream.Stream;
 import org.springframework.data.cassandra.repository.Query;
+import org.springframework.data.repository.Repository;
 import org.srinivas.siteworks.cassandra.Coin;
 
-public interface CoinRepository extends CassandraRepository<Coin,Long> {
+public interface CoinRepository extends Repository<Coin,String> {
 	
-	@Query("SELECT*FROM coins WHERE name=?0")
-    Coin findByCoinName(String name);
- 
-    @Query("SELECT*FROM coins WHERE value=?0")
-    List<Coin> findByCoinValue(String value);
+
+    Coin findByName(String name); 
+	  
+    @Query("SELECT name,value,description FROM coins")
+    Stream<Coin> findAll();
+
+     
+
+
 
 }
