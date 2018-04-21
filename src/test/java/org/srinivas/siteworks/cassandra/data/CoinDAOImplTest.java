@@ -1,57 +1,59 @@
+/**
+ * @author SrinivasJasti
+ */
 package org.srinivas.siteworks.cassandra.data;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.cassandra.core.CassandraAdminOperations;
-import org.springframework.data.cassandra.core.cql.CqlOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.srinivas.siteworks.cassandra.Coin;
+import org.srinivas.siteworks.cassandra.embeddedserver.EmbeddedCassandraUtils;
 import org.srinivas.siteworks.config.AppConfig;
 
-import junit.framework.TestCase;
-
-
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { AppConfig.class})
-@SpringBootTest
-public class CoinDAOImplTest extends TestCase {
+@ContextConfiguration(classes = { AppConfig.class })
+public class CoinDAOImplTest {
 
 	@Autowired
 	CoinDAOImpl coinDAOImpl;
-	
-	@Autowired 
-	private CassandraAdminOperations cassandraAdminTemplate;
-	
+
 	@Autowired
-    CoinRepository coinRepository;
-	
-	@Autowired
-	CqlOperations cqlTemplate;
-	
+	CoinRepository coinRepository;
+
 	private Coin coinOne;
 	private Coin coinTwo;
 	private Coin coinThree;
 
+	private static Boolean isServerAlreadyStarted = false;
+
 	@BeforeClass
-	public static void startCassandraEmbedded() throws Exception  { 
-		EmbeddedCassandraServerHelper.startEmbeddedCassandra("embedded-cassandra.yaml", "target/embeddedCassandra",
-		TimeUnit.SECONDS.toMillis(60));
+	public static void startEmbedded() throws Exception {
+		if (EmbeddedCassandraServerHelper.getSession() == null) {
+			EmbeddedCassandraUtils.startCassandraEmbedded();
+		} else {
+			isServerAlreadyStarted = true;
+		}
 	}
-	
+
 	@AfterClass
-	public static void stopCassandraEmbedded() {
-	    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
+	public static void stopEmbedded() {
+		if (!isServerAlreadyStarted) {
+			EmbeddedCassandraUtils.stopCassandraEmbedded();
+		}
+
 	}
 
 	@Before
@@ -67,30 +69,22 @@ public class CoinDAOImplTest extends TestCase {
 		coinThree = new Coin();
 		coinThree.setName("coinThree");
 		coinThree.setDescription("descriptionThree");
-	    coinThree.setValue("abcd");
-	    coinDAOImpl.cassandraAdminTemplate =cassandraAdminTemplate;
+		coinThree.setValue("abcd");
+
 	}
 
-	
-
-	 
+	@After
 	public void tearDown() {
-	    coinDAOImpl.clearCoins();
+		coinDAOImpl.clearCoins();
 		coinDAOImpl = null;
 	}
- 
-	/**
-	 * Test save coin.
-	 */
+
 	@Test
 	public void testSavecoin() {
 		Coin result = coinDAOImpl.saveCoin(coinOne);
 		assertEquals("descriptionOne", result.getDescription());
 	}
 
-	/**
-	 * Test retrieve coin.
-	 */
 	@Test
 	public void testRetrievecoin() {
 		coinDAOImpl.saveCoin(coinOne);
@@ -98,9 +92,6 @@ public class CoinDAOImplTest extends TestCase {
 		assertEquals("descriptionOne", result.getDescription());
 	}
 
-	/**
-	 * Test delete coin.
-	 */
 	@Test
 	public void testDeletecoin() {
 		coinDAOImpl.saveCoin(coinOne);
@@ -110,35 +101,32 @@ public class CoinDAOImplTest extends TestCase {
 		assertNull(result);
 	}
 
-	/**
-	 * Test update coin.
-	 */
 	@Test
 	public void testUpdatecoin() {
-	    Coin coin =	coinDAOImpl.saveCoin(coinOne);
-	    coin.setValue("44444");
+		Coin coin = coinDAOImpl.saveCoin(coinOne);
+		coin.setValue("44444");
 		coinDAOImpl.updateCoin(coin);
 		Coin result = coinDAOImpl.retrieveCoin(coinOne.getName());
 		assertEquals("44444", result.getValue());
 	}
-	
+
 	@Test
 	public void testRepositoryRetrieveByName() {
 		coinDAOImpl.saveCoin(coinOne);
 		Coin result = coinRepository.findByName(coinOne.getName());
 		assertEquals("descriptionOne", result.getDescription());
 	}
-	
+
 	@Test
 	public void testRepositoryFindAll() {
 		coinDAOImpl.saveCoin(coinOne);
 		coinDAOImpl.saveCoin(coinTwo);
-		Stream<Coin> stream = coinRepository.findAll();
+		Stream<Coin> stream = coinDAOImpl.findAllCoins();
 		List<Coin> coinList = stream.collect(Collectors.toList());
 		assertTrue(coinList.stream().filter(e -> e.getValue().equals("67890")).findFirst().isPresent());
 		assertTrue(coinList.stream().filter(e -> e.getValue().equals("12345")).findFirst().isPresent());
 	}
-	
+
 	@Test
 	public void testCqlTemplateFindByCoinValue() {
 		coinDAOImpl.saveCoin(coinThree);

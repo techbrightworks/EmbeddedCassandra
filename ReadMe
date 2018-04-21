@@ -1,0 +1,12 @@
+EmbeddedDbCassandra
+-----------------------------
+1.Unzip the Zip file
+2.From the command Line move to EmbeddedDbCassandra directory and build the Project.
+3.Build Command: mvn clean install eclipse:clean eclipse:eclipse -Dwtpversion=2.0
+4.Deploy and Run the application Using tomcat7-maven-plugin with command mvn tomcat7:run-war -DskipTests.
+5.Check the REST API with Insomnia REST Client (Choice of REST Client is yours)
+Example1(POST):http://localhost:9980/EmbeddedDbCassandra/coin/addCoin?name=One&value=xyz&description=descriptionOne
+Example2(GET):http://localhost:9980/EmbeddedDbCassandra/coin/findAll
+Example3(PUT):http://localhost:9980/EmbeddedDbCassandra/coin/updateCoin?name=One&value=1234&description=descriptionOne
+Example4(DELETE):http://localhost:9980/EmbeddedDbCassandra/coin/deleteCoin?name=One&value=1234&description=descriptionOne
+6.Source: Java8

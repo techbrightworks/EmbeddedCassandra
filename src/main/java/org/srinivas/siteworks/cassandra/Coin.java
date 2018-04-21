@@ -1,3 +1,6 @@
+/**
+ * @author SrinivasJasti
+ */
 package org.srinivas.siteworks.cassandra;
 
 import org.springframework.data.cassandra.core.mapping.CassandraType;
@@ -5,7 +8,6 @@ import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.Indexed;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
-
 import com.datastax.driver.core.DataType;
 
 @Table(value = "Coins")
@@ -14,7 +16,7 @@ public class Coin {
 	@PrimaryKey("name")
 	@CassandraType(type = DataType.Name.TEXT)
 	private String name;
-    @Indexed
+	@Indexed
 	@Column("value")
 	private String value;
 
@@ -47,7 +49,6 @@ public class Coin {
 
 	@Override
 	public String toString() {
-		return String.format("{ @type = %1$s, name = %2$s, value = %3$s, description = %4$s }", getClass().getName(),
-				getName(), getValue(), getDescription());
+		return String.format("{ @type = %1$s, name = %2$s, value = %3$s, description = %4$s }", getClass().getName(), getName(), getValue(), getDescription());
 	}
 }
